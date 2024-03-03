@@ -579,6 +579,28 @@ static bool do_size(int argc, char *argv[])
     return ok && !error_check();
 }
 
+extern void q_shuffle(struct list_head *q);
+bool do_shuffle(int argc, char *argv[])
+{
+    if (argc != 1) {
+        report(1, "%s takes no arguments", argv[0]);
+        return false;
+    }
+
+    if (!current || !current->q)
+        report(3, "Warning: Calling reverse on null queue");
+    error_check();
+
+    set_noallocate_mode(true);
+    if (current && exception_setup(true))
+        q_shuffle(current->q);
+    exception_cancel();
+
+    set_noallocate_mode(false);
+    q_show(3);
+    return !error_check();
+}
+
 bool do_sort(int argc, char *argv[])
 {
     if (argc != 1) {
@@ -1035,6 +1057,7 @@ static void console_init()
         "Remove from tail of queue. Optionally compare to expected value str",
         "[str]");
     ADD_COMMAND(reverse, "Reverse queue", "");
+    ADD_COMMAND(shuffle, "Do Fisher-Yates shuffle", "");
     ADD_COMMAND(sort, "Sort queue in ascending/descening order", "");
     ADD_COMMAND(size, "Compute queue size n times (default: n == 1)", "[n]");
     ADD_COMMAND(show, "Show queue contents", "");

@@ -365,3 +365,24 @@ int q_merge(struct list_head *head, bool descend)
     }
     return count;
 }
+
+void q_shuffle(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+    int size = q_size(head);
+    for (struct list_head *node = head->prev; node != head && size;
+         node = node->prev, size--) {
+        struct list_head *it = head->next;
+        // find random node
+        for (int r = rand() % size; r > 0; r--) {
+            it = it->next;
+        }
+        if (it == node) {
+            continue;
+        }
+        struct list_head *tmp = head->prev;
+        list_move(it, tmp);
+    }
+}
