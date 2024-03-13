@@ -893,6 +893,14 @@ static void line_edit_next_word(struct line_state *l)
  *
  * The function returns the length of the current buffer.
  */
+#include <netinet/in.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include "linenoise.h"
+#include "web.h"
+extern int web_fd;
+extern int web_connfd;
 static int line_edit(int stdin_fd,
                      int stdout_fd,
                      char *buf,
@@ -924,13 +932,63 @@ static int line_edit(int stdin_fd,
      * initially is just an empty string.
      */
     line_history_add("");
-
     if (write(l.ofd, prompt, l.plen) == -1)
         return -1;
+
+    fd_set set;
+    FD_ZERO(&set);
+    int nfd = l.ifd + 1;
+    if (web_fd != -1) {
+        FD_SET(web_fd, &set);  // set socket
+        nfd = web_fd + 1;
+    }
+    FD_SET(l.ifd, &set);  // set stdin
+
+
     while (1) {
         signed char c;
         int nread;
         char seq[5];
+
+        int rv = select(nfd, &set, NULL, NULL, NULL);
+        struct sockaddr_in clientaddr;
+        socklen_t client_len = sizeof(clientaddr);
+
+        switch (rv) {
+        case -1:
+            perror("select");
+            break;
+        case 0:
+            printf("timeout\n");
+            continue;
+        default:
+            if (web_fd != -1 && FD_ISSET(web_fd, &set)) {
+                FD_CLR(web_fd, &set);  // auto clear?
+                int connfd;
+                connfd = accept(web_fd, (struct sockaddr *) &clientaddr,
+                                &client_len);
+                char *p = web_recv(connfd, &clientaddr);
+                char *buffer =
+                    "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+                web_send(connfd, buffer);
+
+                // web_send(web_connfd, "fuck");
+                int len = 0;
+                if (p) {
+                    strncpy(buf, p, strlen(p) + 1);
+                    len = strlen(p);
+                }
+                web_connfd = connfd;
+                free(p);
+                return len;
+            }
+            // else if(FD_ISSET(l.ifd, &set)){
+            //     nread = read(l.ifd, &c, 1);
+            //     if (nread <= 0)
+            //         return l.len;
+            // }
+            break;
+        }
 
         nread = read(l.ifd, &c, 1);
         if (nread <= 0)

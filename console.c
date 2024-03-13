@@ -189,7 +189,7 @@ static bool interpret_cmda(int argc, char *argv[])
 
     return ok;
 }
-
+int web_connfd;
 /* Execute a command from a command line */
 static bool interpret_cmd(char *cmdline)
 {
@@ -203,6 +203,9 @@ static bool interpret_cmd(char *cmdline)
         free_string(argv[i]);
     free_array(argv, argc, sizeof(char *));
 
+    if (web_connfd) {
+        close(web_connfd);
+    }
     return ok;
 }
 
@@ -392,7 +395,7 @@ static bool do_time(int argc, char *argv[])
 }
 
 static bool use_linenoise = true;
-static int web_fd;
+int web_fd = -1;
 
 static bool do_web(int argc, char *argv[])
 {
@@ -403,9 +406,11 @@ static bool do_web(int argc, char *argv[])
     }
 
     web_fd = web_open(port);
+    int flag = fcntl(web_fd, F_GETFL, 0);
+    fcntl(web_fd, F_SETFL, flag | O_NONBLOCK);
     if (web_fd > 0) {
         printf("listen on port %d, fd is %d\n", port, web_fd);
-        use_linenoise = false;
+        // use_linenoise = false;
     } else {
         perror("ERROR");
         exit(web_fd);
@@ -553,13 +558,14 @@ static bool cmd_done()
  * nfds should be set to the maximum file descriptor for network sockets.
  * If nfds == 0, this indicates that there is no pending network activity
  */
-int web_connfd;
+
 static int cmd_select(int nfds,
                       fd_set *readfds,
                       fd_set *writefds,
                       fd_set *exceptfds,
                       struct timeval *timeout)
 {
+    printf("cmd_select\n");
     int infd;
     fd_set local_readset;
 
@@ -684,7 +690,6 @@ bool run_console(char *infile_name)
         report(1, "ERROR: Could not open source file '%s'", infile_name);
         return false;
     }
-
     if (!has_infile) {
         char *cmdline;
         while (use_linenoise && (cmdline = linenoise(prompt))) {
@@ -692,13 +697,10 @@ bool run_console(char *infile_name)
             line_history_add(cmdline);       /* Add to the history. */
             line_history_save(HISTORY_FILE); /* Save the history on disk. */
             line_free(cmdline);
-            while (buf_stack && buf_stack->fd != STDIN_FILENO)
+            while (buf_stack && buf_stack->fd != STDIN_FILENO) {
                 cmd_select(0, NULL, NULL, NULL, NULL);
+            }
             has_infile = false;
-        }
-        if (!use_linenoise) {
-            while (!cmd_done())
-                cmd_select(0, NULL, NULL, NULL, NULL);
         }
     } else {
         while (!cmd_done())
