@@ -565,7 +565,6 @@ static int cmd_select(int nfds,
                       fd_set *exceptfds,
                       struct timeval *timeout)
 {
-    printf("cmd_select\n");
     int infd;
     fd_set local_readset;
 

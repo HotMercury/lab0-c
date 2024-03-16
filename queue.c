@@ -3,12 +3,33 @@
 #include <string.h>
 
 #include "queue.h"
-
+#include "sort_impl.h"
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
  * following line.
  *   cppcheck-suppress nullPointer
  */
+typedef void (*sort_fn)(struct list_head *head, list_cmp_func_t cmp);
+struct task {
+    sort_fn sort;
+};
+struct task current_task;
+void sort_init()
+{
+    current_task.sort = timsort;
+}
+
+int compare(void *priv, struct list_head *q1, struct list_head *q2)
+{
+    if (q1 == q2)
+        return 0;
+    element_t *e1 = list_entry(q1, element_t, list);
+    element_t *e2 = list_entry(q2, element_t, list);
+    if (priv)
+        *((int *) priv) += 1;
+    return strcmp(e1->value, e2->value);
+}
+
 int merge_two_queues(struct list_head *q1, struct list_head *q2, bool descend);
 void q_node_free(struct list_head *node)
 {
@@ -235,6 +256,19 @@ void q_sort(struct list_head *head, bool descend)
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
+    sort_init();
+    current_task.sort(head, compare);
+    if (descend) {
+        q_reverse(head);
+    }
+}
+/* Sort elements of queue in ascending/descending order */
+/*
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
     // find mid list
     struct list_head *slow, *fast;
     slow = fast = head->next;
@@ -249,6 +283,7 @@ void q_sort(struct list_head *head, bool descend)
     q_sort(&q2, descend);
     merge_two_queues(head, &q2, descend);
 }
+*/
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
