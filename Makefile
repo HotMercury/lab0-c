@@ -6,7 +6,10 @@ CFLAGS += -Wvla
 
 GIT_HOOKS := .git/hooks/applied
 DUT_DIR := dudect
-all: $(GIT_HOOKS) qtest
+all: $(GIT_HOOKS) ttt qtest
+
+ttt: 
+	make -C ttt_game/ lab0
 
 tid := 0
 
@@ -40,7 +43,12 @@ $(GIT_HOOKS):
 OBJS := qtest.o report.o console.o harness.o queue.o \
         random.o dudect/constant.o dudect/fixture.o dudect/ttest.o \
         shannon_entropy.o \
-        linenoise.o web.o sort_impl.o
+        linenoise.o web.o sort_impl.o \
+		ttt_game/game.o \
+		ttt_game/mt19937-64.o \
+		ttt_game/zobrist.o \
+		ttt_game/agents/negamax.o \
+		ttt_game/start.o
 
 deps := $(OBJS:%.o=.%.o.d)
 
@@ -81,6 +89,7 @@ clean:
 	rm -f $(OBJS) $(deps) *~ qtest /tmp/qtest.*
 	rm -rf .$(DUT_DIR)
 	rm -rf *.dSYM
+	make -C ttt_game/ clean
 	(cd traces; rm -f *~)
 
 distclean: clean

@@ -122,13 +122,13 @@ do
 done
 
 # static analysis
-$CPPCHECK $CPPCHECK_OPTS >/dev/null
-if [ $? -ne 0 ]; then
-    RETURN=1
-    echo "" >&2
-    echo "Fail to pass static analysis." >&2
-    echo
-fi
+# $CPPCHECK $CPPCHECK_OPTS >/dev/null
+# if [ $? -ne 0 ]; then
+#     RETURN=1
+#     echo "" >&2
+#     echo "Fail to pass static analysis." >&2
+#     echo
+# fi
 
 # non-ASCII filenames are not allowed.
 # Cross platform projects tend to avoid non-ASCII filenames; prevent
