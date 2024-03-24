@@ -1,3 +1,5 @@
+/* Linux-like hlist implementation */
+
 #pragma once
 
 #include <stdbool.h>
