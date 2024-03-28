@@ -24,7 +24,10 @@ const line_t lines[4] = {
     {1, 1, 0, 0, BOARD_SIZE - GOAL + 1, BOARD_SIZE - GOAL + 1},  // PRIMARY
     {1, -1, 0, GOAL - 1, BOARD_SIZE - GOAL + 1, BOARD_SIZE},     // SECONDARY
 };
-
+/*
+base on line type and position, check if there is a win
+return the winner if there is a win, otherwise return ' '
+*/
 static char check_line_segment_win(const char *t, int i, int j, line_t line)
 {
     char last = t[GET_INDEX(i, j)];
@@ -44,6 +47,12 @@ static char check_line_segment_win(const char *t, int i, int j, line_t line)
     return last;
 }
 
+/*
+check all possible win lines
+return the winner,
+return ' ' if game is not finished,
+return 'D' tie
+*/
 char check_win(char *t)
 {
     for (int i_line = 0; i_line < 4; ++i_line) {
@@ -62,15 +71,27 @@ char check_win(char *t)
     return 'D';
 }
 
+/*
+win 1, lose 0, tie 0.5
+*/
 double calculate_win_value(char win, char player)
 {
     if (win == player)
-        return 1.0;
+        return 1;
     if (win == (player ^ 'O' ^ 'X'))
-        return 0.0;
+        return 0;
     return 0.5;
 }
+unsigned long calculate_win_value_fix(char win, char player)
+{
+    if (win == player)
+        return 1 << 16;
+    if (win == (player ^ 'O' ^ 'X'))
+        return 0;
+    return 1 << 15;
+}
 
+// return moves include all possible place and the end with -1
 int *available_moves(char *table)
 {
     int *moves = malloc(N_GRIDS * sizeof(int));

@@ -21,5 +21,6 @@ extern const line_t lines[4];
 
 int *available_moves(char *table);
 char check_win(char *t);
+unsigned long calculate_win_value_fix(char win, char player);
 double calculate_win_value(char win, char player);
 void draw_board(const char *t);

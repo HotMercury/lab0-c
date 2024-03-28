@@ -130,15 +130,18 @@ int start()
 
         if (turn == ai) {
 #ifdef USE_RL
+            printf("I am in USE_RL\n");
             int move = play_rl(table, &agent);
             record_move(move);
 #elif defined(USE_MCTS)
+            printf("I am in USE_MCTS\n");
             int move = mcts(table, ai);
             if (move != -1) {
                 table[move] = ai;
                 record_move(move);
             }
 #else
+            printf("I am in USE_NEGAMAX\n");
             int move = negamax_predict(table, ai).move;
             if (move != -1) {
                 table[move] = ai;
