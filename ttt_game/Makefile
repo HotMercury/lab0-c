@@ -1,5 +1,5 @@
 PROG = ttt
-CFLAGS := -Wall -Wextra -std=c11
+CFLAGS := -g -Wall -Wextra -std=c11
 CFLAGS += -I. -MMD
 LDFLAGS :=
 TRAIN = train
@@ -22,20 +22,36 @@ deps += $(RL).d
 deps += $(TRAIN).d
 deps += $(MCTS).d
 
-lab0: $(OBJS)
+ttt_mode: $(MODE) $(OBJS)
+
+$(OBJS) : %.o : %.c
+	$(CC) $(CFLAGS) -c $^ -o $@
 
 $(PROG): $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(RL): main.c agents/reinforcement_learning.c game.c
-	$(CC) -o $@ $^ $(RL_CFLAGS)
+$(RL): start.c agents/reinforcement_learning.c game.c
+	$(CC) -o start.o -c start.c $(RL_CFLAGS)
+	$(CC) -o agents/reinforcement_learning.o -c agents/reinforcement_learning.c $(RL_CFLAGS)
+	$(CC) -o game.o -c game.c $(RL_CFLAGS)
+	
 
 $(TRAIN): $(TRAIN).c agents/reinforcement_learning.c game.c
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) -o train.o -c train.c $(CFLAGS)
+	$(CC) -o agents/reinforcement_learning.o -c agents/reinforcement_learning.c $(CFLAGS)
+	$(CC) -o game.o -c game.c $(CFLAGS)
+	
 
-$(MCTS): main.c agents/mcts.c game.c
-	$(CC) -o $@ $^ $(MCTS_CFLAGS) $(MCTS_LDFLAGS)
 
+$(MCTS): start.c agents/mcts.c game.c
+	$(CC) -o start.o -c start.c $(MCTS_CFLAGS) $(MCTS_LDFLAGS)
+	$(CC) -o agents/mcts.o -c agents/mcts.c $(MCTS_CFLAGS) $(MCTS_LDFLAGS)
+	$(CC) -o game.o -c game.c $(MCTS_CFLAGS) $(MCTS_LDFLAGS)
+
+
+# for i in $^ ; do \
+# 	$(CC) -o $@ -c $$i $(MCTS_CFLAGS) $(MCTS_LDFLAGS); \
+# done
 clean:
 	-$(RM) $(PROG) $(OBJS) $(deps) $(TRAIN) $(RL) $(MCTS)
 	-$(RM) *.bin

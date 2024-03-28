@@ -6,10 +6,25 @@ CFLAGS += -Wvla
 
 GIT_HOOKS := .git/hooks/applied
 DUT_DIR := dudect
-all: $(GIT_HOOKS) ttt qtest
+all: $(GIT_HOOKS) ttt_start qtest
 
-ttt: 
-	make -C ttt_game/ lab0
+lab0 = ttt_mode
+ttt_option := 
+ifeq ($(ttt_option), mcts)
+    TTT = ttt_game/start.o ttt_game/agents/mcts.o ttt_game/game.o
+else ifeq ($(ttt_option), rl)
+	TTT = ttt_game/start.o ttt_game/agents/reinforcement_learning.o ttt_game/game.o
+else ifeq ($(ttt_option), train)
+	TTT = ttt_game/train.o ttt_game/agents/reinforcement_learning.o ttt_game/game.o
+else
+	TTT = ttt_game/game.o \
+		ttt_game/mt19937-64.o \
+		ttt_game/zobrist.o \
+		ttt_game/agents/negamax.o \
+		ttt_game/start.o
+endif
+ttt_start: 
+	make -C ttt_game/ $(lab0) MODE=$(ttt_option)
 
 tid := 0
 
@@ -43,16 +58,12 @@ $(GIT_HOOKS):
 OBJS := qtest.o report.o console.o harness.o queue.o \
         random.o dudect/constant.o dudect/fixture.o dudect/ttest.o \
         shannon_entropy.o \
-        linenoise.o web.o sort_impl.o \
-		ttt_game/game.o \
-		ttt_game/mt19937-64.o \
-		ttt_game/zobrist.o \
-		ttt_game/agents/negamax.o \
-		ttt_game/start.o
+        linenoise.o web.o sort_impl.o 
+
 
 deps := $(OBJS:%.o=.%.o.d)
 
-qtest: $(OBJS)
+qtest: $(OBJS) $(TTT)
 	$(VECHO) "  LD\t$@\n"
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ -lm
 
