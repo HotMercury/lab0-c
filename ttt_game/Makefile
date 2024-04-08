@@ -22,7 +22,7 @@ deps += $(RL).d
 deps += $(TRAIN).d
 deps += $(MCTS).d
 
-ttt_mode: $(MODE) $(OBJS)
+ttt_mode: $(OBJS) $(MODE) 
 
 $(OBJS) : %.o : %.c
 	$(CC) $(CFLAGS) -c $^ -o $@

@@ -1033,10 +1033,12 @@ static bool do_next(int argc, char *argv[])
 
     return q_show(0);
 }
-extern int start();
+extern int start(int, char **);
 bool do_ttt(int argc, char *argv[])
 {
-    start();
+    if (argc > 1)
+        ttt_game_mode = atoi(argv[1]);
+    start(argc, argv);
     return true;
 }
 
@@ -1090,6 +1092,8 @@ static void console_init()
               "Number of times allow queue operations to return false", NULL);
     add_param("descend", &descend,
               "Sort and merge queue in ascending/descending order", NULL);
+    add_param("TTT_game_mode", &ttt_game_mode,
+              "Select TTT game mode with plyer vs AI or AI vs AI", NULL);
 }
 
 /* Signal handlers */

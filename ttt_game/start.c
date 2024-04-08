@@ -8,6 +8,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "agents/negamax.h"
 #include "game.h"
 #ifdef USE_RL
 #include "agents/reinforcement_learning.h"
@@ -97,8 +98,17 @@ static int get_input(char player)
     return GET_INDEX(y, x);
 }
 
-int start()
+int start(int argc, char **argv)
 {
+    // select game mode AI vs AI or AI vs Player
+    int ttt_game_mode = 0;
+    if (argc > 1) {
+        ttt_game_mode = atoi(argv[1]);
+    }
+    // AI algorithm
+    if (ttt_game_mode == 1)
+        negamax_init();
+
     srand(time(NULL));
     char table[N_GRIDS];
     memset(table, ' ', N_GRIDS);
@@ -151,15 +161,25 @@ int start()
         } else {
             draw_board(table);
             int move;
-            while (1) {
-                move = get_input(turn);
-                if (table[move] == ' ') {
-                    break;
+            if (ttt_game_mode == 1) {
+                printf("I am in USE_NEGAMAX\n");
+                move = negamax_predict(table, turn).move;
+                if (move != -1) {
+                    table[move] = turn;
+                    record_move(move);
                 }
-                printf("Invalid operation: the position has been marked\n");
+            } else {
+                while (1) {
+                    move = get_input(turn);
+                    if (table[move] == ' ') {
+                        break;
+                    }
+                    printf("Invalid operation: the position has been marked\n");
+                }
+                table[move] = turn;
+                record_move(move);
             }
-            table[move] = turn;
-            record_move(move);
+            draw_board(table);
         }
         turn = turn == 'X' ? 'O' : 'X';
     }

@@ -11,7 +11,10 @@ all: $(GIT_HOOKS) ttt_start qtest
 lab0 = ttt_mode
 ttt_option := 
 ifeq ($(ttt_option), mcts)
-    TTT = ttt_game/start.o ttt_game/agents/mcts.o ttt_game/game.o
+    TTT = ttt_game/start.o ttt_game/agents/mcts.o ttt_game/game.o \
+		ttt_game/mt19937-64.o \
+		ttt_game/zobrist.o \
+		ttt_game/agents/negamax.o
 else ifeq ($(ttt_option), rl)
 	TTT = ttt_game/start.o ttt_game/agents/reinforcement_learning.o ttt_game/game.o
 else ifeq ($(ttt_option), train)
